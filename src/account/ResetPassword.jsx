@@ -1,18 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import queryString from 'query-string';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
-import { accountService, alertService } from '@/_services';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAlert } from '@/contexts/AlertContext';
 
-function ResetPassword({ history }) {
+function ResetPassword() {
+    const { validateResetToken, resetPassword } = useAuth();
+    const { clear, success, error: showError } = useAlert();
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const TokenStatus = {
         Validating: 'Validating',
         Valid: 'Valid',
         Invalid: 'Invalid'
     }
-    
+
     const [token, setToken] = useState(null);
     const [tokenStatus, setTokenStatus] = useState(TokenStatus.Validating);
 
@@ -20,9 +26,9 @@ function ResetPassword({ history }) {
         const { token } = queryString.parse(location.search);
 
         // remove token from url to prevent http referer leakage
-        history.replace(location.pathname);
+        navigate(location.pathname, { replace: true });
 
-        accountService.validateResetToken(token)
+        validateResetToken(token)
             .then(() => {
                 setToken(token);
                 setTokenStatus(TokenStatus.Valid);
@@ -47,17 +53,16 @@ function ResetPassword({ history }) {
                 .required('Confirm Password is required'),
         });
 
-        function onSubmit({ password, confirmPassword }, { setSubmitting }) {
-            alertService.clear();
-            accountService.resetPassword({ token, password, confirmPassword })
-                .then(() => {
-                    alertService.success('Password reset successful, you can now login', { keepAfterRouteChange: true });
-                    history.push('login');
-                })
-                .catch(error => {
-                    setSubmitting(false);
-                    alertService.error(error);
-                });
+        async function onSubmit({ password, confirmPassword }, { setSubmitting }) {
+            clear();
+            try {
+                await resetPassword({ token, password, confirmPassword });
+                success('Password reset successful, you can now login', { keepAfterRouteChange: true });
+                navigate('login');
+            } catch (error) {
+                setSubmitting(false);
+                showError(error.message);
+            }
         }
 
         return (

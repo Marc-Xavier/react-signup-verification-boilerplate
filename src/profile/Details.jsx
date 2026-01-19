@@ -1,11 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useRouteMatch } from 'react-router-dom';
 
-import { accountService } from '@/_services';
+import { useAuth } from '@/contexts/AuthContext';
 
-function Details({ match }) {
-    const { path } = match;
-    const user = accountService.userValue;
+function Details() {
+    const { path } = useRouteMatch();
+    const { user } = useAuth();
 
     return (
         <div>

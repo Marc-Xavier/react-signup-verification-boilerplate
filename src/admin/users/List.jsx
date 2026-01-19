@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useRouteMatch } from 'react-router-dom';
 
-import { accountService } from '@/_services';
+import { useUsers } from '@/hooks/useUsers';
 
-function List({ match }) {
-    const { path } = match;
+function List() {
+    const { path } = useRouteMatch();
+    const { getAll, deleteUser: deleteUserApi } = useUsers();
     const [users, setUsers] = useState(null);
 
     useEffect(() => {
-        accountService.getAll().then(x => setUsers(x));
+        getAll().then(x => setUsers(x));
     }, []);
 
     function deleteUser(id) {
@@ -16,7 +17,7 @@ function List({ match }) {
             if (x.id === id) { x.isDeleting = true; }
             return x;
         }));
-        accountService.delete(id).then(() => {
+        deleteUserApi(id).then(() => {
             setUsers(users => users.filter(x => x.id !== id));
         });
     }

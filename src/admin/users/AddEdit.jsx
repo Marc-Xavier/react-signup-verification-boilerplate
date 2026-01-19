@@ -1,14 +1,18 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
-import { accountService, alertService } from '@/_services';
+import { useUsers } from '@/hooks/useUsers';
+import { useAlert } from '@/contexts/AlertContext';
 
-function AddEdit({ history, match }) {
-    const { id } = match.params;
+function AddEdit() {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const { getById, create, update } = useUsers();
+    const { success, error: showError } = useAlert();
     const isAddMode = !id;
-    
+
     const initialValues = {
         title: '',
         firstName: '',
@@ -41,37 +45,35 @@ function AddEdit({ history, match }) {
             .oneOf([Yup.ref('password')], 'Passwords must match')
     });
 
-    function onSubmit(fields, { setStatus, setSubmitting }) {
+    async function onSubmit(fields, { setStatus, setSubmitting }) {
         setStatus();
         if (isAddMode) {
-            createUser(fields, setSubmitting);
+            await createUser(fields, setSubmitting);
         } else {
-            updateUser(id, fields, setSubmitting);
+            await updateUser(id, fields, setSubmitting);
         }
     }
 
-    function createUser(fields, setSubmitting) {
-        accountService.create(fields)
-            .then(() => {
-                alertService.success('User added successfully', { keepAfterRouteChange: true });
-                history.push('.');
-            })
-            .catch(error => {
-                setSubmitting(false);
-                alertService.error(error);
-            });
+    async function createUser(fields, setSubmitting) {
+        try {
+            await create(fields);
+            success('User added successfully', { keepAfterRouteChange: true });
+            navigate('.');
+        } catch (error) {
+            setSubmitting(false);
+            showError(error.message);
+        }
     }
 
-    function updateUser(id, fields, setSubmitting) {
-        accountService.update(id, fields)
-            .then(() => {
-                alertService.success('Update successful', { keepAfterRouteChange: true });
-                history.push('..');
-            })
-            .catch(error => {
-                setSubmitting(false);
-                alertService.error(error);
-            });
+    async function updateUser(id, fields, setSubmitting) {
+        try {
+            await update(id, fields);
+            success('Update successful', { keepAfterRouteChange: true });
+            navigate('..');
+        } catch (error) {
+            setSubmitting(false);
+            showError(error.message);
+        }
     }
 
     return (
@@ -80,7 +82,7 @@ function AddEdit({ history, match }) {
                 useEffect(() => {
                     if (!isAddMode) {
                         // get user and set form fields
-                        accountService.getById(id).then(user => {
+                        getById(id).then(user => {
                             const fields = ['title', 'firstName', 'lastName', 'email', 'role'];
                             fields.forEach(field => setFieldValue(field, user[field], false));
                         });

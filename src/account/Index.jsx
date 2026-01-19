@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Switch, useNavigate, useRouteMatch } from 'react-router-dom';
 
-import { accountService } from '@/_services';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { Login } from './Login';
 import { Register } from './Register';
@@ -9,15 +9,17 @@ import { VerifyEmail } from './VerifyEmail';
 import { ForgotPassword } from './ForgotPassword';
 import { ResetPassword } from './ResetPassword';
 
-function Account({ history, match }) {
-    const { path } = match;
+function Account() {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const { path } = useRouteMatch();
 
     useEffect(() => {
         // redirect to home if already logged in
-        if (accountService.userValue) {
-            history.push('/');
+        if (user) {
+            navigate('/');
         }
-    }, []);
+    }, [user, navigate]);
 
     return (
         <div className="container">

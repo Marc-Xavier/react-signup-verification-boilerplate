@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import queryString from 'query-string';
 
-import { accountService, alertService } from '@/_services';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAlert } from '@/contexts/AlertContext';
 
-function VerifyEmail({ history }) {
+function VerifyEmail() {
+    const { verifyEmail } = useAuth();
+    const { success } = useAlert();
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const EmailStatus = {
         Verifying: 'Verifying',
         Failed: 'Failed'
@@ -16,12 +22,12 @@ function VerifyEmail({ history }) {
         const { token } = queryString.parse(location.search);
 
         // remove token from url to prevent http referer leakage
-        history.replace(location.pathname);
+        navigate(location.pathname, { replace: true });
 
-        accountService.verifyEmail(token)
+        verifyEmail(token)
             .then(() => {
-                alertService.success('Verification successful, you can now login', { keepAfterRouteChange: true });
-                history.push('login');
+                success('Verification successful, you can now login', { keepAfterRouteChange: true });
+                navigate('login');
             })
             .catch(() => {
                 setEmailStatus(EmailStatus.Failed);

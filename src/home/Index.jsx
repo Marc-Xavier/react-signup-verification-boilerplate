@@ -1,10 +1,10 @@
 import React from 'react';
 
-import { accountService } from '@/_services';
+import { useAuth } from '@/contexts/AuthContext';
 
 function Home() {
-    const user = accountService.userValue;
-    
+    const { user } = useAuth();
+
     return (
         <div className="p-4">
             <div className="container">

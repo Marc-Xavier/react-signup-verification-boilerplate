@@ -1,11 +1,11 @@
 import React from 'react';
-import { Route, Switch } from 'react-router-dom';
+import { Route, Switch, useRouteMatch } from 'react-router-dom';
 
 import { Overview } from './Overview';
 import { Users } from './users';
 
-function Admin({ match }) {
-    const { path } = match;
+function Admin() {
+    const { path } = useRouteMatch();
 
     return (
         <div className="p-4">

@@ -3,9 +3,13 @@ import { Link } from 'react-router-dom';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
-import { accountService, alertService } from '@/_services';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAlert } from '@/contexts/AlertContext';
 
 function ForgotPassword() {
+    const { forgotPassword } = useAuth();
+    const { clear, success, error: showError } = useAlert();
+
     const initialValues = {
         email: ''
     };
@@ -16,12 +20,16 @@ function ForgotPassword() {
             .required('Email is required')
     });
 
-    function onSubmit({ email }, { setSubmitting }) {
-        alertService.clear();
-        accountService.forgotPassword(email)
-            .then(() => alertService.success('Please check your email for password reset instructions'))
-            .catch(error => alertService.error(error))
-            .finally(() => setSubmitting(false));
+    async function onSubmit({ email }, { setSubmitting }) {
+        clear();
+        try {
+            await forgotPassword(email);
+            success('Please check your email for password reset instructions');
+        } catch (error) {
+            showError(error.message);
+        } finally {
+            setSubmitting(false);
+        }
     }
 
     return (

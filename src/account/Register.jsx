@@ -1,11 +1,16 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
-import { accountService, alertService } from '@/_services';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAlert } from '@/contexts/AlertContext';
 
-function Register({ history }) {
+function Register() {
+    const { register } = useAuth();
+    const { success, error: showError } = useAlert();
+    const navigate = useNavigate();
+
     const initialValues = {
         title: '',
         firstName: '',
@@ -36,17 +41,16 @@ function Register({ history }) {
             .oneOf([true], 'Accept Terms & Conditions is required')
     });
 
-    function onSubmit(fields, { setStatus, setSubmitting }) {
+    async function onSubmit(fields, { setStatus, setSubmitting }) {
         setStatus();
-        accountService.register(fields)
-            .then(() => {
-                alertService.success('Registration successful, please check your email for verification instructions', { keepAfterRouteChange: true });
-                history.push('login');
-            })
-            .catch(error => {
-                setSubmitting(false);
-                alertService.error(error);
-            });
+        try {
+            await register(fields);
+            success('Registration successful, please check your email for verification instructions', { keepAfterRouteChange: true });
+            navigate('login');
+        } catch (error) {
+            setSubmitting(false);
+            showError(error.message);
+        }
     }
 
     return (

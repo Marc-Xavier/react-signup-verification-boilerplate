@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useRouteMatch } from 'react-router-dom';
 
-function Overview({ match }) {
-    const { path } = match;
+function Overview() {
+    const { path } = useRouteMatch();
 
     return (
         <div>

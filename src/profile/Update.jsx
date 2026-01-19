@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
-import { accountService, alertService } from '@/_services';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAlert } from '@/contexts/AlertContext';
 
-function Update({ history }) {
-    const user = accountService.userValue;
+function Update() {
+    const { user, update, deleteUser } = useAuth();
+    const { success, error: showError } = useAlert();
+    const navigate = useNavigate();
+
     const initialValues = {
         title: user.title,
         firstName: user.firstName,
@@ -35,25 +39,29 @@ function Update({ history }) {
             .oneOf([Yup.ref('password')], 'Passwords must match')
     });
 
-    function onSubmit(fields, { setStatus, setSubmitting }) {
+    async function onSubmit(fields, { setStatus, setSubmitting }) {
         setStatus();
-        accountService.update(user.id, fields)
-            .then(() => {
-                alertService.success('Update successful', { keepAfterRouteChange: true });
-                history.push('.');
-            })
-            .catch(error => {
-                setSubmitting(false);
-                alertService.error(error);
-            });
+        try {
+            await update(user.id, fields);
+            success('Update successful', { keepAfterRouteChange: true });
+            navigate('.');
+        } catch (error) {
+            setSubmitting(false);
+            showError(error.message);
+        }
     }
 
     const [isDeleting, setIsDeleting] = useState(false);
-    function onDelete() {
+    async function onDelete() {
         if (confirm('Are you sure?')) {
             setIsDeleting(true);
-            accountService.delete(user.id)
-                .then(() => alertService.success('Account deleted successfully'));
+            try {
+                await deleteUser(user.id);
+                success('Account deleted successfully');
+            } catch (error) {
+                setIsDeleting(false);
+                showError(error.message);
+            }
         }
     }
 

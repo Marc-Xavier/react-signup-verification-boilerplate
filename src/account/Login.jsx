@@ -1,11 +1,17 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
-import { accountService, alertService } from '@/_services';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAlert } from '@/contexts/AlertContext';
 
-function Login({ history, location }) {
+function Login() {
+    const { login } = useAuth();
+    const { clear, error: showError } = useAlert();
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const initialValues = {
         email: '',
         password: ''
@@ -18,17 +24,16 @@ function Login({ history, location }) {
         password: Yup.string().required('Password is required')
     });
 
-    function onSubmit({ email, password }, { setSubmitting }) {
-        alertService.clear();
-        accountService.login(email, password)
-            .then(() => {
-                const { from } = location.state || { from: { pathname: "/" } };
-                history.push(from);
-            })
-            .catch(error => {
-                setSubmitting(false);
-                alertService.error(error);
-            });
+    async function onSubmit({ email, password }, { setSubmitting }) {
+        clear();
+        try {
+            await login(email, password);
+            const { from } = location.state || { from: { pathname: "/" } };
+            navigate(from.pathname || '/');
+        } catch (error) {
+            setSubmitting(false);
+            showError(error.message);
+        }
     }
 
     return (

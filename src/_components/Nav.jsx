@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { NavLink, Route } from 'react-router-dom';
+import React from 'react';
+import { NavLink, Route, useNavigate } from 'react-router-dom';
 
-import { Role } from '@/_helpers';
-import { accountService } from '@/_services';
+import { Role } from '@/constants/roles';
+import { useAuth } from '@/contexts/AuthContext';
 
 function Nav() {
-    const [user, setUser] = useState({});
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        const subscription = accountService.user.subscribe(x => setUser(x));
-        return subscription.unsubscribe;
-    }, []);
+    const handleLogout = async () => {
+        await logout();
+        navigate('/account/login');
+    };
 
     // only show nav when logged in
     if (!user) return null;
@@ -24,7 +25,7 @@ function Nav() {
                     {user.role === Role.Admin &&
                         <NavLink to="/admin" className="nav-item nav-link">Admin</NavLink>
                     }
-                    <a onClick={accountService.logout} className="nav-item nav-link">Logout</a>
+                    <a onClick={handleLogout} className="nav-item nav-link">Logout</a>
                 </div>
             </nav>
             <Route path="/admin" component={AdminNav} />
