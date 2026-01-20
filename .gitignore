@@ -39,3 +39,5 @@ typings
 
 # dist folder
 dist
+
+MIGRATION_TODO.md
