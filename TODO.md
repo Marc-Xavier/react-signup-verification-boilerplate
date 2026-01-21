@@ -17,10 +17,12 @@ Convert the entire React signup/verification boilerplate app to use the React Ro
   - [ ] Replace `react-router-dom@5` with `react-router@7`
   - [ ] Add `@react-router/dev@7`
   - [x] Remove ALL legacy form/validation dependencies (cleaner, zero-dependency approach):
-    - [x] **Remove `formik`** - Use native React controlled components (useState + onChange)
-    - [x] **Remove `yup`** - Use plain JavaScript validation functions
-    - [x] **Remove `rxjs`** - Already using React Context for alerts (no library needed)
+    - [x] **Remove `formik`** - Use native React controlled components (useState + onChange) ✅ COMPLETED
+    - [x] **Remove `yup`** - Use plain JavaScript validation functions ✅ COMPLETED
+    - [x] **Remove `rxjs`** - Already using React Context for alerts (no library needed) ✅ COMPLETED
     - [ ] **Remove `query-string`** - Use React Router v7's `useSearchParams()` or native `URLSearchParams`
+  - [x] **Email Verification Removed** - Users can now login immediately after registration ✅ COMPLETED
+    - See: `CHANGELOG-EMAIL-VERIFICATION-REMOVAL.md` for details
   - [ ] Decide on styling approach (keep LESS or migrate to TailwindCSS)
 
 ### 1.2 Project Structure Migration

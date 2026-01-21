@@ -23,8 +23,6 @@ export function configureFakeBackend() {
                         return revokeToken();
                     case url.endsWith('/accounts/register') && method === 'POST':
                         return register();
-                    case url.endsWith('/accounts/verify-email') && method === 'POST':
-                        return verifyEmail();
                     case url.endsWith('/accounts/forgot-password') && method === 'POST':
                         return forgotPassword();
                     case url.endsWith('/accounts/validate-reset-token') && method === 'POST':
@@ -53,7 +51,7 @@ export function configureFakeBackend() {
 
             function authenticate() {
                 const { email, password } = body();
-                const user = users.find(x => x.email === email && x.password === password && x.isVerified);
+                const user = users.find(x => x.email === email && x.password === password);
 
                 if (!user) return error('Email or password is incorrect');
 
@@ -112,22 +110,12 @@ export function configureFakeBackend() {
 
             function register() {
                 const user = body();
-    
-                if (users.find(x => x.email === user.email)) {
-                    // display email already registered "email" in alert
-                    // setTimeout(() => {
-                    //     alertService.info(`
-                    //         <h4>Email Already Registered</h4>
-                    //         <p>Your email ${user.email} is already registered.</p>
-                    //         <p>If you don't know your password please visit the <a href="${location.origin}/account/forgot-password">forgot password</a> page.</p>
-                    //         <div><strong>NOTE:</strong> The fake backend displayed this "email" so you can test without an api. A real backend would send a real email.</div>
-                    //     `, { autoClose: false });
-                    // }, 1000);
 
+                if (users.find(x => x.email === user.email)) {
                     // always return ok() response to prevent email enumeration
                     return ok();
                 }
-    
+
                 // assign user id and a few other properties then save
                 user.id = newUserId();
                 if (user.id === 1) {
@@ -137,41 +125,15 @@ export function configureFakeBackend() {
                     user.role = Role.User;
                 }
                 user.dateCreated = new Date().toISOString();
-                user.verificationToken = new Date().getTime().toString();
-                user.isVerified = false;
+                user.isVerified = true; // automatically verified
                 user.refreshTokens = [];
                 delete user.confirmPassword;
                 users.push(user);
                 localStorage.setItem(usersKey, JSON.stringify(users));
 
-                // display verification email in alert
-                // setTimeout(() => {
-                //     const verifyUrl = `${location.origin}/account/verify-email?token=${user.verificationToken}`;
-                //     alertService.info(`
-                //         <h4>Verification Email</h4>
-                //         <p>Thanks for registering!</p>
-                //         <p>Please click the below link to verify your email address:</p>
-                //         <p><a href="${verifyUrl}">${verifyUrl}</a></p>
-                //         <div><strong>NOTE:</strong> The fake backend displayed this "email" so you can test without an api. A real backend would send a real email.</div>
-                //     `, { autoClose: false });
-                // }, 1000);
-
                 return ok();
             }
     
-            function verifyEmail() {
-                const { token } = body();
-                const user = users.find(x => !!x.verificationToken && x.verificationToken === token);
-                
-                if (!user) return error('Verification failed');
-                
-                // set is verified flag to true if token is valid
-                user.isVerified = true;
-                localStorage.setItem(usersKey, JSON.stringify(users));
-
-                return ok();
-            }
-
             function forgotPassword() {
                 const { email } = body();
                 const user = users.find(x => x.email === email);

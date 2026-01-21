@@ -102,7 +102,7 @@ function Register() {
 
         try {
             await register(values);
-            success('Registration successful, please check your email for verification instructions', { keepAfterRouteChange: true });
+            success('Registration successful! You can now login', { keepAfterRouteChange: true });
             history.push('login');
         } catch (error) {
             setIsSubmitting(false);

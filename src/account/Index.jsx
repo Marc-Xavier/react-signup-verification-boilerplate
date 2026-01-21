@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 
 import { Login } from './Login';
 import { Register } from './Register';
-import { VerifyEmail } from './VerifyEmail';
 import { ForgotPassword } from './ForgotPassword';
 import { ResetPassword } from './ResetPassword';
 
@@ -29,7 +28,6 @@ function Account() {
                         <Switch>
                             <Route path={`${path}/login`} component={Login} />
                             <Route path={`${path}/register`} component={Register} />
-                            <Route path={`${path}/verify-email`} component={VerifyEmail} />
                             <Route path={`${path}/forgot-password`} component={ForgotPassword} />
                             <Route path={`${path}/reset-password`} component={ResetPassword} />
                         </Switch>

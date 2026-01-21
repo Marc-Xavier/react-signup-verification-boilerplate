@@ -145,27 +145,6 @@ export const AuthProvider = ({ children }) => {
         return text ? JSON.parse(text) : null;
     };
 
-    // Verify email function using native fetch
-    const verifyEmail = async (token) => {
-        const response = await fetch(`${baseUrl}/verify-email`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ token })
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            const data = text ? JSON.parse(text) : {};
-            const error = (data && data.message) || response.statusText;
-            throw new Error(error);
-        }
-
-        const text = await response.text();
-        return text ? JSON.parse(text) : null;
-    };
-
     // Forgot password function using native fetch
     const forgotPassword = async (email) => {
         const response = await fetch(`${baseUrl}/forgot-password`, {
@@ -325,7 +304,6 @@ export const AuthProvider = ({ children }) => {
         logout,
         refreshToken,
         register,
-        verifyEmail,
         forgotPassword,
         validateResetToken,
         resetPassword,
