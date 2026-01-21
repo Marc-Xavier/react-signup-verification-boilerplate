@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useHistory } from 'react-router-dom';
-import { Formik, Field, Form, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useAlert } from '@/contexts/AlertContext';
@@ -11,47 +9,100 @@ function Update() {
     const { success, error: showError } = useAlert();
     const history = useHistory();
 
-    const initialValues = {
+    const [values, setValues] = useState({
         title: user.title,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         password: '',
         confirmPassword: ''
-    };
-
-    const validationSchema = Yup.object().shape({
-        title: Yup.string()
-            .required('Title is required'),
-        firstName: Yup.string()
-            .required('First Name is required'),
-        lastName: Yup.string()
-            .required('Last Name is required'),
-        email: Yup.string()
-            .email('Email is invalid')
-            .required('Email is required'),
-        password: Yup.string()
-            .min(6, 'Password must be at least 6 characters'),
-        confirmPassword: Yup.string()
-            .when('password', (password, schema) => {
-                if (password) return schema.required('Confirm Password is required');
-            })
-            .oneOf([Yup.ref('password')], 'Passwords must match')
     });
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
-    async function onSubmit(fields, { setStatus, setSubmitting }) {
-        setStatus();
+    function validateField(name, value, allValues = values) {
+        switch (name) {
+            case 'title':
+                if (!value) return 'Title is required';
+                return '';
+            case 'firstName':
+                if (!value) return 'First Name is required';
+                return '';
+            case 'lastName':
+                if (!value) return 'Last Name is required';
+                return '';
+            case 'email':
+                if (!value) return 'Email is required';
+                if (!/\S+@\S+\.\S+/.test(value)) return 'Email is invalid';
+                return '';
+            case 'password':
+                if (value && value.length < 6) return 'Password must be at least 6 characters';
+                return '';
+            case 'confirmPassword':
+                if (allValues.password && value !== allValues.password) return 'Passwords must match';
+                return '';
+            default:
+                return '';
+        }
+    }
+
+    function handleChange(e) {
+        const { name, value } = e.target;
+        const newValues = { ...values, [name]: value };
+        setValues(newValues);
+
+        // Validate on change if field was touched
+        if (touched[name]) {
+            const error = validateField(name, value, newValues);
+            setErrors(prev => ({ ...prev, [name]: error }));
+        }
+
+        // Also revalidate confirmPassword when password changes
+        if (name === 'password' && touched.confirmPassword) {
+            const confirmError = validateField('confirmPassword', newValues.confirmPassword, newValues);
+            setErrors(prev => ({ ...prev, confirmPassword: confirmError }));
+        }
+    }
+
+    function handleBlur(e) {
+        const { name, value } = e.target;
+        setTouched(prev => ({ ...prev, [name]: true }));
+
+        const error = validateField(name, value);
+        setErrors(prev => ({ ...prev, [name]: error }));
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+
+        // Validate all fields
+        const newErrors = {};
+        Object.keys(values).forEach(key => {
+            const error = validateField(key, values[key]);
+            if (error) newErrors[key] = error;
+        });
+
+        setErrors(newErrors);
+        const allTouched = Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {});
+        setTouched(allTouched);
+
+        // Stop if there are errors
+        if (Object.keys(newErrors).length > 0) return;
+
+        setIsSubmitting(true);
+
         try {
-            await update(user.id, fields);
+            await update(user.id, values);
             success('Update successful', { keepAfterRouteChange: true });
             history.push('.');
         } catch (error) {
-            setSubmitting(false);
+            setIsSubmitting(false);
             showError(error.message);
         }
     }
 
-    const [isDeleting, setIsDeleting] = useState(false);
     async function onDelete() {
         if (confirm('Are you sure?')) {
             setIsDeleting(true);
@@ -66,68 +117,117 @@ function Update() {
     }
 
     return (
-        <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={onSubmit}>
-            {({ errors, touched, isSubmitting }) => (
-                <Form>
-                    <h1>Update Profile</h1>
-                    <div className="form-row">
-                        <div className="form-group col">
-                            <label>Title</label>
-                            <Field name="title" as="select" className={'form-control' + (errors.title && touched.title ? ' is-invalid' : '')}>
-                                <option value=""></option>
-                                <option value="Mr">Mr</option>
-                                <option value="Mrs">Mrs</option>
-                                <option value="Miss">Miss</option>
-                                <option value="Ms">Ms</option>
-                            </Field>
-                            <ErrorMessage name="title" component="div" className="invalid-feedback" />
-                        </div>
-                        <div className="form-group col-5">
-                            <label>First Name</label>
-                            <Field name="firstName" type="text" className={'form-control' + (errors.firstName && touched.firstName ? ' is-invalid' : '')} />
-                            <ErrorMessage name="firstName" component="div" className="invalid-feedback" />
-                        </div>
-                        <div className="form-group col-5">
-                            <label>Last Name</label>
-                            <Field name="lastName" type="text" className={'form-control' + (errors.lastName && touched.lastName ? ' is-invalid' : '')} />
-                            <ErrorMessage name="lastName" component="div" className="invalid-feedback" />
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Email</label>
-                        <Field name="email" type="text" className={'form-control' + (errors.email && touched.email ? ' is-invalid' : '')} />
-                        <ErrorMessage name="email" component="div" className="invalid-feedback" />
-                    </div>
-                    <h3 className="pt-3">Change Password</h3>
-                    <p>Leave blank to keep the same password</p>
-                    <div className="form-row">
-                        <div className="form-group col">
-                            <label>Password</label>
-                            <Field name="password" type="password" className={'form-control' + (errors.password && touched.password ? ' is-invalid' : '')} />
-                            <ErrorMessage name="password" component="div" className="invalid-feedback" />
-                        </div>
-                        <div className="form-group col">
-                            <label>Confirm Password</label>
-                            <Field name="confirmPassword" type="password" className={'form-control' + (errors.confirmPassword && touched.confirmPassword ? ' is-invalid' : '')} />
-                            <ErrorMessage name="confirmPassword" component="div" className="invalid-feedback" />
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <button type="submit" disabled={isSubmitting} className="btn btn-primary mr-2">
-                            {isSubmitting && <span className="spinner-border spinner-border-sm mr-1"></span>}
-                            Update
-                        </button>
-                        <button type="button" onClick={() => onDelete()} className="btn btn-danger" style={{ width: '75px' }} disabled={isDeleting}>
-                            {isDeleting
-                                ? <span className="spinner-border spinner-border-sm"></span>
-                                : <span>Delete</span>
-                            }
-                        </button>
-                        <Link to="." className="btn btn-link">Cancel</Link>
-                    </div>
-                </Form>
-            )}
-        </Formik>
+        <form onSubmit={handleSubmit}>
+            <h1>Update Profile</h1>
+            <div className="form-row">
+                <div className="form-group col">
+                    <label>Title</label>
+                    <select
+                        name="title"
+                        value={values.title}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={'form-control' + (errors.title && touched.title ? ' is-invalid' : '')}
+                    >
+                        <option value=""></option>
+                        <option value="Mr">Mr</option>
+                        <option value="Mrs">Mrs</option>
+                        <option value="Miss">Miss</option>
+                        <option value="Ms">Ms</option>
+                    </select>
+                    {errors.title && touched.title && (
+                        <div className="invalid-feedback">{errors.title}</div>
+                    )}
+                </div>
+                <div className="form-group col-5">
+                    <label>First Name</label>
+                    <input
+                        name="firstName"
+                        type="text"
+                        value={values.firstName}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={'form-control' + (errors.firstName && touched.firstName ? ' is-invalid' : '')}
+                    />
+                    {errors.firstName && touched.firstName && (
+                        <div className="invalid-feedback">{errors.firstName}</div>
+                    )}
+                </div>
+                <div className="form-group col-5">
+                    <label>Last Name</label>
+                    <input
+                        name="lastName"
+                        type="text"
+                        value={values.lastName}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={'form-control' + (errors.lastName && touched.lastName ? ' is-invalid' : '')}
+                    />
+                    {errors.lastName && touched.lastName && (
+                        <div className="invalid-feedback">{errors.lastName}</div>
+                    )}
+                </div>
+            </div>
+            <div className="form-group">
+                <label>Email</label>
+                <input
+                    name="email"
+                    type="text"
+                    value={values.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={'form-control' + (errors.email && touched.email ? ' is-invalid' : '')}
+                />
+                {errors.email && touched.email && (
+                    <div className="invalid-feedback">{errors.email}</div>
+                )}
+            </div>
+            <h3 className="pt-3">Change Password</h3>
+            <p>Leave blank to keep the same password</p>
+            <div className="form-row">
+                <div className="form-group col">
+                    <label>Password</label>
+                    <input
+                        name="password"
+                        type="password"
+                        value={values.password}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={'form-control' + (errors.password && touched.password ? ' is-invalid' : '')}
+                    />
+                    {errors.password && touched.password && (
+                        <div className="invalid-feedback">{errors.password}</div>
+                    )}
+                </div>
+                <div className="form-group col">
+                    <label>Confirm Password</label>
+                    <input
+                        name="confirmPassword"
+                        type="password"
+                        value={values.confirmPassword}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={'form-control' + (errors.confirmPassword && touched.confirmPassword ? ' is-invalid' : '')}
+                    />
+                    {errors.confirmPassword && touched.confirmPassword && (
+                        <div className="invalid-feedback">{errors.confirmPassword}</div>
+                    )}
+                </div>
+            </div>
+            <div className="form-group">
+                <button type="submit" disabled={isSubmitting} className="btn btn-primary mr-2">
+                    {isSubmitting && <span className="spinner-border spinner-border-sm mr-1"></span>}
+                    Update
+                </button>
+                <button type="button" onClick={() => onDelete()} className="btn btn-danger" style={{ width: '75px' }} disabled={isDeleting}>
+                    {isDeleting
+                        ? <span className="spinner-border spinner-border-sm"></span>
+                        : <span>Delete</span>
+                    }
+                </button>
+                <Link to="." className="btn btn-link">Cancel</Link>
+            </div>
+        </form>
     )
 }
 

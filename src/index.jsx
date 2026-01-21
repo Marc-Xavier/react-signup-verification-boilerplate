@@ -9,7 +9,7 @@ import { App } from './app';
 import './styles.less';
 
 // setup fake backend
-import { configureFakeBackend } from './_helpers';
+import { configureFakeBackend } from './_helpers/fake-backend';
 configureFakeBackend();
 
 const root = createRoot(document.getElementById('app'));

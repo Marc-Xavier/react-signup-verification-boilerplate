@@ -3,7 +3,9 @@ import { Route, Switch, Redirect, useLocation } from 'react-router-dom';
 
 import { Role } from '@/constants/roles';
 import { useAuth } from '@/contexts/AuthContext';
-import { Nav, PrivateRoute, Alert } from '@/_components';
+import { Nav } from '@/_components/Nav';
+import { PrivateRoute } from '@/_components/PrivateRoute';
+import { Alert } from '@/_components/Alert';
 import { Home } from '@/home';
 import { Profile } from '@/profile';
 import { Admin } from '@/admin';

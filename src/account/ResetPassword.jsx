@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import queryString from 'query-string';
-import { Formik, Field, Form, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useAlert } from '@/contexts/AlertContext';
@@ -21,6 +19,13 @@ function ResetPassword() {
 
     const [token, setToken] = useState(null);
     const [tokenStatus, setTokenStatus] = useState(TokenStatus.Validating);
+    const [values, setValues] = useState({
+        password: '',
+        confirmPassword: ''
+    });
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const { token } = queryString.parse(location.search);
@@ -38,59 +43,117 @@ function ResetPassword() {
             });
     }, []);
 
-    function getForm() {
-        const initialValues = {
-            password: '',
-            confirmPassword: ''
-        };
+    function validateField(name, value, allValues = values) {
+        switch (name) {
+            case 'password':
+                if (!value) return 'Password is required';
+                if (value.length < 6) return 'Password must be at least 6 characters';
+                return '';
+            case 'confirmPassword':
+                if (!value && allValues.password) return 'Confirm Password is required';
+                if (value !== allValues.password) return 'Passwords must match';
+                return '';
+            default:
+                return '';
+        }
+    }
 
-        const validationSchema = Yup.object().shape({
-            password: Yup.string()
-                .min(6, 'Password must be at least 6 characters')
-                .required('Password is required'),
-            confirmPassword: Yup.string()
-                .oneOf([Yup.ref('password'), null], 'Passwords must match')
-                .required('Confirm Password is required'),
-        });
+    function handleChange(e) {
+        const { name, value } = e.target;
+        const newValues = { ...values, [name]: value };
+        setValues(newValues);
 
-        async function onSubmit({ password, confirmPassword }, { setSubmitting }) {
-            clear();
-            try {
-                await resetPassword({ token, password, confirmPassword });
-                success('Password reset successful, you can now login', { keepAfterRouteChange: true });
-                history.push('login');
-            } catch (error) {
-                setSubmitting(false);
-                showError(error.message);
-            }
+        // Validate on change if field was touched
+        if (touched[name]) {
+            const error = validateField(name, value, newValues);
+            setErrors(prev => ({ ...prev, [name]: error }));
         }
 
+        // Also revalidate confirmPassword when password changes
+        if (name === 'password' && touched.confirmPassword) {
+            const confirmError = validateField('confirmPassword', newValues.confirmPassword, newValues);
+            setErrors(prev => ({ ...prev, confirmPassword: confirmError }));
+        }
+    }
+
+    function handleBlur(e) {
+        const { name, value } = e.target;
+        setTouched(prev => ({ ...prev, [name]: true }));
+
+        const error = validateField(name, value);
+        setErrors(prev => ({ ...prev, [name]: error }));
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+
+        // Validate all fields
+        const newErrors = {};
+        Object.keys(values).forEach(key => {
+            const error = validateField(key, values[key]);
+            if (error) newErrors[key] = error;
+        });
+
+        setErrors(newErrors);
+        setTouched({ password: true, confirmPassword: true });
+
+        // Stop if there are errors
+        if (Object.keys(newErrors).length > 0) return;
+
+        clear();
+        setIsSubmitting(true);
+
+        try {
+            await resetPassword({ token, password: values.password, confirmPassword: values.confirmPassword });
+            success('Password reset successful, you can now login', { keepAfterRouteChange: true });
+            history.push('login');
+        } catch (error) {
+            setIsSubmitting(false);
+            showError(error.message);
+        }
+    }
+
+    function getForm() {
         return (
-            <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={onSubmit}>
-                {({ errors, touched, isSubmitting }) => (
-                    <Form>
-                        <div className="form-group">
-                            <label>Password</label>
-                            <Field name="password" type="password" className={'form-control' + (errors.password && touched.password ? ' is-invalid' : '')} />
-                            <ErrorMessage name="password" component="div" className="invalid-feedback" />
-                        </div>
-                        <div className="form-group">
-                            <label>Confirm Password</label>
-                            <Field name="confirmPassword" type="password" className={'form-control' + (errors.confirmPassword && touched.confirmPassword ? ' is-invalid' : '')} />
-                            <ErrorMessage name="confirmPassword" component="div" className="invalid-feedback" />
-                        </div>
-                        <div className="form-row">
-                            <div className="form-group col">
-                                <button type="submit" disabled={isSubmitting} className="btn btn-primary">
-                                    {isSubmitting && <span className="spinner-border spinner-border-sm mr-1"></span>}
-                                    Reset Password
-                                </button>
-                                <Link to="login" className="btn btn-link">Cancel</Link>
-                            </div>
-                        </div>
-                    </Form>
-                )}
-            </Formik>
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label>Password</label>
+                    <input
+                        name="password"
+                        type="password"
+                        value={values.password}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={'form-control' + (errors.password && touched.password ? ' is-invalid' : '')}
+                    />
+                    {errors.password && touched.password && (
+                        <div className="invalid-feedback">{errors.password}</div>
+                    )}
+                </div>
+                <div className="form-group">
+                    <label>Confirm Password</label>
+                    <input
+                        name="confirmPassword"
+                        type="password"
+                        value={values.confirmPassword}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={'form-control' + (errors.confirmPassword && touched.confirmPassword ? ' is-invalid' : '')}
+                    />
+                    {errors.confirmPassword && touched.confirmPassword && (
+                        <div className="invalid-feedback">{errors.confirmPassword}</div>
+                    )}
+                </div>
+                <div className="form-row">
+                    <div className="form-group col">
+                        <button type="submit" disabled={isSubmitting} className="btn btn-primary">
+                            {isSubmitting && <span className="spinner-border spinner-border-sm mr-1"></span>}
+                            Reset Password
+                        </button>
+                        <Link to="login" className="btn btn-link">Cancel</Link>
+                    </div>
+                </div>
+            </form>
         );
     }
 
@@ -113,4 +176,4 @@ function ResetPassword() {
     )
 }
 
-export { ResetPassword }; 
+export { ResetPassword };
