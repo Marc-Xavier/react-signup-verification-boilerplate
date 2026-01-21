@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import queryString from 'query-string';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +8,7 @@ import { useAlert } from '@/contexts/AlertContext';
 function VerifyEmail() {
     const { verifyEmail } = useAuth();
     const { success } = useAlert();
-    const navigate = useNavigate();
+    const history = useHistory();
     const location = useLocation();
 
     const EmailStatus = {
@@ -22,12 +22,12 @@ function VerifyEmail() {
         const { token } = queryString.parse(location.search);
 
         // remove token from url to prevent http referer leakage
-        navigate(location.pathname, { replace: true });
+        history.replace(location.pathname);
 
         verifyEmail(token)
             .then(() => {
                 success('Verification successful, you can now login', { keepAfterRouteChange: true });
-                navigate('login');
+                history.push('login');
             })
             .catch(() => {
                 setEmailStatus(EmailStatus.Failed);

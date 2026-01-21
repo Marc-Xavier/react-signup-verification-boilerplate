@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Route, Switch, useNavigate, useRouteMatch } from 'react-router-dom';
+import { Route, Switch, useHistory, useRouteMatch } from 'react-router-dom';
 
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -11,15 +11,15 @@ import { ResetPassword } from './ResetPassword';
 
 function Account() {
     const { user } = useAuth();
-    const navigate = useNavigate();
+    const history = useHistory();
     const { path } = useRouteMatch();
 
     useEffect(() => {
         // redirect to home if already logged in
         if (user) {
-            navigate('/');
+            history.push('/');
         }
-    }, [user, navigate]);
+    }, [user, history]);
 
     return (
         <div className="container">

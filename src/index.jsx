@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { AlertProvider } from './contexts/AlertContext';
@@ -12,13 +12,13 @@ import './styles.less';
 import { configureFakeBackend } from './_helpers';
 configureFakeBackend();
 
-render(
+const root = createRoot(document.getElementById('app'));
+root.render(
     <BrowserRouter>
         <AuthProvider>
             <AlertProvider>
                 <App />
             </AlertProvider>
         </AuthProvider>
-    </BrowserRouter>,
-    document.getElementById('app')
+    </BrowserRouter>
 );

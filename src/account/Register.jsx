@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
@@ -9,7 +9,7 @@ import { useAlert } from '@/contexts/AlertContext';
 function Register() {
     const { register } = useAuth();
     const { success, error: showError } = useAlert();
-    const navigate = useNavigate();
+    const history = useHistory();
 
     const initialValues = {
         title: '',
@@ -46,7 +46,7 @@ function Register() {
         try {
             await register(fields);
             success('Registration successful, please check your email for verification instructions', { keepAfterRouteChange: true });
-            navigate('login');
+            history.push('login');
         } catch (error) {
             setSubmitting(false);
             showError(error.message);

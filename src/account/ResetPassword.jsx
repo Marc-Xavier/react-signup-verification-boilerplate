@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import queryString from 'query-string';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -10,7 +10,7 @@ import { useAlert } from '@/contexts/AlertContext';
 function ResetPassword() {
     const { validateResetToken, resetPassword } = useAuth();
     const { clear, success, error: showError } = useAlert();
-    const navigate = useNavigate();
+    const history = useHistory();
     const location = useLocation();
 
     const TokenStatus = {
@@ -26,7 +26,7 @@ function ResetPassword() {
         const { token } = queryString.parse(location.search);
 
         // remove token from url to prevent http referer leakage
-        navigate(location.pathname, { replace: true });
+        history.replace(location.pathname);
 
         validateResetToken(token)
             .then(() => {
@@ -58,7 +58,7 @@ function ResetPassword() {
             try {
                 await resetPassword({ token, password, confirmPassword });
                 success('Password reset successful, you can now login', { keepAfterRouteChange: true });
-                navigate('login');
+                history.push('login');
             } catch (error) {
                 setSubmitting(false);
                 showError(error.message);

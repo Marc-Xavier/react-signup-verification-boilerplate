@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useHistory, useParams } from 'react-router-dom';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
@@ -8,7 +8,7 @@ import { useAlert } from '@/contexts/AlertContext';
 
 function AddEdit() {
     const { id } = useParams();
-    const navigate = useNavigate();
+    const history = useHistory();
     const { getById, create, update } = useUsers();
     const { success, error: showError } = useAlert();
     const isAddMode = !id;
@@ -58,7 +58,7 @@ function AddEdit() {
         try {
             await create(fields);
             success('User added successfully', { keepAfterRouteChange: true });
-            navigate('.');
+            history.push('.');
         } catch (error) {
             setSubmitting(false);
             showError(error.message);
@@ -69,7 +69,7 @@ function AddEdit() {
         try {
             await update(id, fields);
             success('Update successful', { keepAfterRouteChange: true });
-            navigate('..');
+            history.push('..');
         } catch (error) {
             setSubmitting(false);
             showError(error.message);

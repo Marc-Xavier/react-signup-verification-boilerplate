@@ -1,16 +1,16 @@
 import React from 'react';
-import { NavLink, Route, useNavigate } from 'react-router-dom';
+import { NavLink, Route, useHistory } from 'react-router-dom';
 
 import { Role } from '@/constants/roles';
 import { useAuth } from '@/contexts/AuthContext';
 
 function Nav() {
     const { user, logout } = useAuth();
-    const navigate = useNavigate();
+    const history = useHistory();
 
     const handleLogout = async () => {
         await logout();
-        navigate('/account/login');
+        history.push('/account/login');
     };
 
     // only show nav when logged in

@@ -1,5 +1,5 @@
-import { Role } from './'
-import { alertService } from '@/_services';
+import { Role } from '@/constants/roles';
+// import { alertService } from '@/_services';
 
 // array in local storage for registered users
 const usersKey = 'react-signup-verification-boilerplate-users';
@@ -115,14 +115,14 @@ export function configureFakeBackend() {
     
                 if (users.find(x => x.email === user.email)) {
                     // display email already registered "email" in alert
-                    setTimeout(() => {
-                        alertService.info(`
-                            <h4>Email Already Registered</h4>
-                            <p>Your email ${user.email} is already registered.</p>
-                            <p>If you don't know your password please visit the <a href="${location.origin}/account/forgot-password">forgot password</a> page.</p>
-                            <div><strong>NOTE:</strong> The fake backend displayed this "email" so you can test without an api. A real backend would send a real email.</div>
-                        `, { autoClose: false });
-                    }, 1000);
+                    // setTimeout(() => {
+                    //     alertService.info(`
+                    //         <h4>Email Already Registered</h4>
+                    //         <p>Your email ${user.email} is already registered.</p>
+                    //         <p>If you don't know your password please visit the <a href="${location.origin}/account/forgot-password">forgot password</a> page.</p>
+                    //         <div><strong>NOTE:</strong> The fake backend displayed this "email" so you can test without an api. A real backend would send a real email.</div>
+                    //     `, { autoClose: false });
+                    // }, 1000);
 
                     // always return ok() response to prevent email enumeration
                     return ok();
@@ -145,16 +145,16 @@ export function configureFakeBackend() {
                 localStorage.setItem(usersKey, JSON.stringify(users));
 
                 // display verification email in alert
-                setTimeout(() => {
-                    const verifyUrl = `${location.origin}/account/verify-email?token=${user.verificationToken}`;
-                    alertService.info(`
-                        <h4>Verification Email</h4>
-                        <p>Thanks for registering!</p>
-                        <p>Please click the below link to verify your email address:</p>
-                        <p><a href="${verifyUrl}">${verifyUrl}</a></p>
-                        <div><strong>NOTE:</strong> The fake backend displayed this "email" so you can test without an api. A real backend would send a real email.</div>
-                    `, { autoClose: false });
-                }, 1000);
+                // setTimeout(() => {
+                //     const verifyUrl = `${location.origin}/account/verify-email?token=${user.verificationToken}`;
+                //     alertService.info(`
+                //         <h4>Verification Email</h4>
+                //         <p>Thanks for registering!</p>
+                //         <p>Please click the below link to verify your email address:</p>
+                //         <p><a href="${verifyUrl}">${verifyUrl}</a></p>
+                //         <div><strong>NOTE:</strong> The fake backend displayed this "email" so you can test without an api. A real backend would send a real email.</div>
+                //     `, { autoClose: false });
+                // }, 1000);
 
                 return ok();
             }
@@ -187,12 +187,12 @@ export function configureFakeBackend() {
                 // display password reset email in alert
                 setTimeout(() => {
                     const resetUrl = `${location.origin}/account/reset-password?token=${user.resetToken}`;
-                    alertService.info(`
-                        <h4>Reset Password Email</h4>
-                        <p>Please click the below link to reset your password, the link will be valid for 1 day:</p>
-                        <p><a href="${resetUrl}">${resetUrl}</a></p>
-                        <div><strong>NOTE:</strong> The fake backend displayed this "email" so you can test without an api. A real backend would send a real email.</div>
-                    `, { autoClose: false });
+                    // alertService.info(`
+                    //     <h4>Reset Password Email</h4>
+                    //     <p>Please click the below link to reset your password, the link will be valid for 1 day:</p>
+                    //     <p><a href="${resetUrl}">${resetUrl}</a></p>
+                    //     <div><strong>NOTE:</strong> The fake backend displayed this "email" so you can test without an api. A real backend would send a real email.</div>
+                    // `, { autoClose: false });
                 }, 1000);
 
                 return ok();

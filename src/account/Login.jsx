@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
@@ -9,7 +9,7 @@ import { useAlert } from '@/contexts/AlertContext';
 function Login() {
     const { login } = useAuth();
     const { clear, error: showError } = useAlert();
-    const navigate = useNavigate();
+    const history = useHistory();
     const location = useLocation();
 
     const initialValues = {
@@ -29,7 +29,7 @@ function Login() {
         try {
             await login(email, password);
             const { from } = location.state || { from: { pathname: "/" } };
-            navigate(from.pathname || '/');
+            history.push(from.pathname || '/');
         } catch (error) {
             setSubmitting(false);
             showError(error.message);

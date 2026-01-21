@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
@@ -9,7 +9,7 @@ import { useAlert } from '@/contexts/AlertContext';
 function Update() {
     const { user, update, deleteUser } = useAuth();
     const { success, error: showError } = useAlert();
-    const navigate = useNavigate();
+    const history = useHistory();
 
     const initialValues = {
         title: user.title,
@@ -44,7 +44,7 @@ function Update() {
         try {
             await update(user.id, fields);
             success('Update successful', { keepAfterRouteChange: true });
-            navigate('.');
+            history.push('.');
         } catch (error) {
             setSubmitting(false);
             showError(error.message);
